@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(uuid())
+  username String @unique
+  passwordHash String
+  money Int @default(10000)
+  createdAt DateTime @default(now())
+  sessions Session[]
+  territories Territory[]
+  quotes Quote[]
+}
+model Session {
+  tokenHash String @id
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+model Territory {
+  id String @id @default(uuid())
+  number Int @unique @default(autoincrement())
+  name String
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id])
+  areaKm2 Float
+  minLon Float
+  minLat Float
+  maxLon Float
+  maxLat Float
+  color String @default("#b4d478")
+  grid String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  geometry TerritoryGeometry?
+  history TerritoryHistory[]
+  buildings Building[]
+  characters Character[]
+  farms Farm[]
+  resources Resource[]
+  listing MarketplaceListing?
+  offers Offer[]
+  purchases Purchase[]
+  @@index([ownerId])
+  @@index([minLon, maxLon, minLat, maxLat])
+}
+model TerritoryGeometry {
+  territoryId String @id
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  polygon Json
+}
+model TerritoryHistory {
+  id String @id @default(uuid())
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  type String
+  text String
+  actorId String?
+  createdAt DateTime @default(now())
+  @@index([territoryId, createdAt])
+}
+model Quote {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  polygon Json
+  areaKm2 Float
+  priceCents Int
+  territoryId String? @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+model Purchase {
+  id String @id @default(uuid())
+  idempotencyKey String @unique
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id])
+  buyerId String
+  sellerId String?
+  amountCents Int
+  type String
+  provider String @default("SIMULATED")
+  createdAt DateTime @default(now())
+  @@index([buyerId])
+  @@index([sellerId])
+}
+model MarketplaceListing {
+  id String @id @default(uuid())
+  territoryId String @unique
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  sellerId String
+  priceCents Int
+  status String @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status])
+}
+model Offer {
+  id String @id @default(uuid())
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  buyerId String
+  sellerId String
+  fromUserId String
+  toUserId String
+  amountCents Int
+  status String @default("OPEN")
+  parentId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([toUserId, status])
+  @@index([fromUserId, status])
+}
+model Building {
+  id String @id @default(uuid())
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  type String
+  x Int
+  y Int
+  progress Float @default(0)
+  createdAt DateTime @default(now())
+  farm Farm?
+  @@index([territoryId])
+}
+model Character {
+  id String @id @default(uuid())
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  name String
+  age Float @default(20)
+  profession String @default("Builder")
+  health Float @default(100)
+  energy Float @default(100)
+  hunger Float @default(0)
+  x Float
+  y Float
+  task String @default("Exploring")
+  home String?
+  job String?
+  inventory Json @default("{}")
+  path Json @default("[]")
+  @@index([territoryId])
+}
+model Farm {
+  id String @id @default(uuid())
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  buildingId String @unique
+  building Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  crop String @default("Wheat")
+  growth Float @default(0)
+  fertility Float @default(0.8)
+  harvests Int @default(0)
+}
+model Resource {
+  id String @id @default(uuid())
+  territoryId String
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  kind String
+  amount Float @default(0)
+  capacity Float @default(600)
+  production Float @default(0)
+  consumption Float @default(0)
+  @@unique([territoryId, kind])
+}
+model WorldEvent {
+  id String @id @default(uuid())
+  type String
+  text String
+  territoryId String?
+  actorId String?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+model WorldState {
+  id Int @id @default(1)
+  tick Int @default(0)
+  revision Int @default(0)
+  lastTick DateTime @default(now())
+}
+model GameConfig {
+  id Int @id @default(1)
+  resourcePrices Json @default("{\"Food\":1,\"Wood\":2,\"Stone\":3,\"Metal\":5,\"Energy\":2}")
+  pricing Json
+  tickMs Int @default(3000)
+}
+model CommandReceipt {
+  userId String
+  requestId String
+  fingerprint String
+  result Json
+  createdAt DateTime @default(now())
+  @@id([userId, requestId])
+}

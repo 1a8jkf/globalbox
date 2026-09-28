@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#215d7a" />
+    <meta name="description" content="Um planeta vivo em pixel art. Explore os continentes, florestas e oceanos da Terra." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Globalbox — um mundo vivo</title>
+  </head>
+  <body>
+    <main aria-label="Mundo em pixel art">
+      <canvas id="world" tabindex="0" aria-label="Mapa da Terra em pixel art. Arraste para explorar, use a roda do mouse ou pinça para ampliar. Use as setas para mover, mais e menos para zoom e Home para ver todo o planeta." aria-describedby="instructions"></canvas>
+      <p id="instructions" class="sr-only">Explore o mundo com o mouse, toque ou teclado. As setas movem o mapa, mais e menos ajustam o zoom e Home restaura a visão global.</p>
+      <p id="status" class="sr-only" role="status">Preparando o mundo.</p>
+      <noscript>Ative o JavaScript para explorar o mundo.</noscript>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

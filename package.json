@@ -1,0 +1,64 @@
+{
+  "name": "globalbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,web \"npm:dev:server\" \"npm:dev:web\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "data:fetch": "node scripts/fetch-geography.mjs",
+    "data:prepare": "node scripts/prepare-geography.mjs",
+    "dev:server": "node --env-file=.env.local --experimental-strip-types server/index.ts",
+    "dev:web": "vite --host 0.0.0.0 --port 5173",
+    "db:generate": "node --env-file=.env.local node_modules/prisma/build/index.js generate",
+    "db:deploy": "node --env-file=.env.local node_modules/prisma/build/index.js migrate deploy",
+    "db:seed": "node --env-file=.env.local --experimental-strip-types server/seed.ts",
+    "start": "NODE_ENV=production node --env-file=.env.local --experimental-strip-types server/index.ts",
+    "map:prepare": "node --experimental-strip-types scripts/prepare-map.mjs",
+    "test:integration": "node --env-file=.env.local scripts/test-integration.mjs",
+    "env:init": "node scripts/local-env.mjs",
+    "characters:prepare": "node scripts/prepare-characters.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@turf/turf": "^7.4.0",
+    "cookie-parser": "^1.4.7",
+    "d3-contour": "^4.0.2",
+    "d3-geo": "^3.1.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "maplibre-gl": "^6.11.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "redis": "^6.2.1",
+    "ws": "^8.21.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.0.9",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/d3-contour": "^3.0.6",
+    "@types/d3-geo": "^3.1.1",
+    "@types/express": "^5.0.6",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.1",
+    "concurrently": "^10.0.5",
+    "prettier": "^3.9.9",
+    "prisma": "^6.19.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
+  }
+}

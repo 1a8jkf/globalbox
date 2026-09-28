@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    network_mode: host
+    env_file: .env.local
+    command: ["postgres", "-p", "55432", "-c", "listen_addresses=127.0.0.1"]
+    volumes:
+      - territory-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 55432 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    network_mode: host
+    env_file: .env.local
+    command: ["sh", "-c", "exec redis-server --bind 127.0.0.1 --port 56379 --requirepass \"$$REDIS_PASSWORD\" --appendonly yes"]
+    volumes:
+      - territory-redis:/data
+volumes:
+  territory-postgres:
+  territory-redis:
