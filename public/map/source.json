@@ -1,0 +1,8 @@
+{
+  "source": "Natural Earth, public domain",
+  "revision": "ca96624a56bd078437bca8184e78163e5039ad19",
+  "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_populated_places_simple.geojson",
+  "sha256": "fd3fa867a320cbd5c5b6bb5bc550afeec2939fb2cef688e508007282a55ac42f",
+  "projection": "Web Mercator",
+  "raster": 1536
+}
