@@ -12,8 +12,9 @@ export function visibleKeys(view:View,level:number,margin=0):ChunkKey[] {
 }
 export function desiredLevel(view:View):number {
   let level=Math.max(0,Math.min(LEVELS-1,Math.floor(Math.log2(Math.max(1,view.scale*16)))));
-  // Bound the working set even on very large screens; overview tiles stay pinned.
-  while(level>0 && visibleKeys(view,level,1).length>40)level--;
+  // Size LOD from visible tiles, not prefetch margins: crossing a chunk boundary
+  // must not remove a full detail level. Ancestors and overview fit the cache.
+  while(level>0 && visibleKeys(view,level).length>36)level--;
   return level;
 }
 export function selectRequests(view:View,level=desiredLevel(view)):ChunkKey[] {

@@ -1,3 +1,4 @@
+import { TerrainTiles } from "../terrain/tiles.ts";
 /** Geographic Canvas fallback for devices without WebGL2. Same camera/interaction contract. */
 import { booleanPointInPolygon, point } from "@turf/turf";
 import type {
@@ -38,6 +39,7 @@ class CanvasMap {
   image = new Image();
   flat: HTMLCanvasElement | null = null;
   terrainVisible = true;
+  terrainTiles: TerrainTiles;
   sources = new Map<
     string,
     {
@@ -72,6 +74,7 @@ class CanvasMap {
     this.zoom = options.zoom ?? 1.7;
     this.minZoom = options.minZoom ?? 1;
     this.maxZoom = options.maxZoom ?? 19;
+    this.terrainTiles = new TerrainTiles(() => this.draw());
     this.resize();
     const listen = (type: string, handler: EventListener) => {
       this.canvas.addEventListener(type, handler, { passive: false });
@@ -386,6 +389,8 @@ class CanvasMap {
         size,
         size,
       );
+    if (this.terrainVisible)
+      this.terrainTiles.draw(c, this as unknown as MapLibreMap);
     for (const layer of this.layers.values()) {
       if (layer.layout?.visibility === "none") continue;
       const data = this.sources.get(layer.source)?.data;
@@ -421,6 +426,7 @@ class CanvasMap {
   }
   remove() {
     this.disposed = true;
+    this.terrainTiles.dispose();
     cancelAnimationFrame(this.frame);
     this.cleanup.forEach((f) => f());
     this.events.clear();

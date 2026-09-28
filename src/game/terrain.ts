@@ -2,7 +2,7 @@ import type { Territory } from "./types.ts";
 import { tree } from "./sprites.ts";
 import { BUILDINGS, type BuildingKind } from "../../shared/game.ts";
 const cache = new Map<string, { key: string; canvas: HTMLCanvasElement }>();
-/** At most 24 × 1024² RGBA images = 96 MiB; refresh only on geometry/building changes. */
+/** At most 8 × 1024² RGBA images = 32 MiB (64 MiB reserved for global tiles); refresh only on geometry/building changes. */
 export function terrainCanvas(t: Territory) {
   const key =
     t.grid + "|" + t.buildings?.map((b) => `${b.type}:${b.x}:${b.y}`).join(";");
@@ -34,49 +34,14 @@ export function terrainCanvas(t: Territory) {
         y < b.y + size + 0.5
       );
     });
-  // Small irregular patches replace the previous alternating 16px squares.
-  for (let y = 0; y < 256; y++)
-    for (let x = 0; x < 256; x++) {
-      const tx = Math.floor(x / 4),
-        ty = Math.floor(y / 4),
-        v = cell(tx, ty);
-      if (v === "0") continue;
-      const patch =
-        Math.sin(x * 0.12 + Math.sin(y * 0.07) * 2) +
-        Math.cos(y * 0.13 - Math.sin(x * 0.09));
-      const n = hash(x, y);
-      const palette =
-        v === "w"
-          ? ["#378daa", "#429db5", "#54adbf"]
-          : v === "s"
-            ? ["#cdb46d", "#dfc780", "#ead48e"]
-            : v === "m"
-              ? ["#8d9972", "#9fa582", "#b1ad88"]
-              : v === "f"
-                ? ["#6e9e48", "#7daa4e", "#88b652"]
-                : ["#85b854", "#94c15b", "#a3c96a"];
-      c.fillStyle =
-        palette[patch + n * 0.8 < -0.35 ? 0 : patch + n * 0.8 > 1 ? 2 : 1];
-      c.fillRect(x * 4, y * 4, 4, 4);
-      if (v !== "w" && v !== "m" && n > 0.975 && !occupied(tx, ty)) {
-        c.fillStyle = n > 0.992 ? "#f3df8a" : "#517c3f";
-        c.fillRect(x * 4 + 1, y * 4, 1, 2);
-      }
-    }
+  // Geography and soil are supplied by the global terrain tiles. This layer
+  // contains only the local simulation vegetation/objects, with transparent ground.
   for (let y = 0; y < 64; y++)
     for (let x = 0; x < 64; x++) {
       const v = cell(x, y),
         px = x * 16,
         py = y * 16;
       if (v === "0") continue;
-      // Shores follow actual water cells, never the ownership border.
-      if (v !== "w") {
-        c.fillStyle = "#e3ce8a";
-        if (cell(x - 1, y) === "w") c.fillRect(px, py, 3, 16);
-        if (cell(x + 1, y) === "w") c.fillRect(px + 13, py, 3, 16);
-        if (cell(x, y - 1) === "w") c.fillRect(px, py, 16, 3);
-        if (cell(x, y + 1) === "w") c.fillRect(px, py + 13, 16, 3);
-      }
       if (occupied(x, y)) continue;
       if (
         (v === "f" && hash(x, y, 51) > 0.22) ||
@@ -109,7 +74,7 @@ export function terrainCanvas(t: Territory) {
     }
   cache.delete(t.id);
   cache.set(t.id, { key, canvas });
-  while (cache.size > 24) {
+  while (cache.size > 8) {
     const id = cache.keys().next().value!;
     const old = cache.get(id)!;
     old.canvas.width = old.canvas.height = 0;

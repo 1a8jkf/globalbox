@@ -15,7 +15,7 @@ export class Scene {
   }
   draw(ctx:CanvasRenderingContext2D,camera:Camera,animals:Animal[],time:number,reducedMotion:boolean):void {
     const {width,height,x,y,scale}=camera;
-    ctx.imageSmoothingEnabled=false;ctx.fillStyle='#215d7a';ctx.fillRect(0,0,width,height);
+    ctx.imageSmoothingEnabled=false;ctx.fillStyle='#10365d';ctx.fillRect(0,0,width,height);
     const minX=Math.max(0,-x/scale),minY=Math.max(0,-y/scale),maxX=Math.min(this.world.width,(width-x)/scale),maxY=Math.min(this.world.height,(height-y)/scale);
     // Parents always cover the complete view while sharper children arrive.
     const chunks=[...this.world.cache.entries.entries()].filter(([,chunk])=>{

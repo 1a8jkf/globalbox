@@ -1,3 +1,4 @@
+import { TerrainTiles } from "../terrain/tiles.ts";
 import { useEffect, useRef, useState } from "react";
 import type { MapOptions } from "maplibre-gl";
 import { createCanvasMap } from "./canvas-map.ts";
@@ -57,13 +58,42 @@ export function WorldMap(props: MapProps) {
     let disposed = false,
       dispose = () => {};
     const setup = async () => {
+      let disposeTerrain = () => {};
       const createMap = async (options: MapOptions) => {
         const probe = document.createElement("canvas");
         const gl = probe.getContext("webgl2");
         if (gl) {
           gl.getExtension("WEBGL_lose_context")?.loseContext();
-          const { Map } = await import("maplibre-gl");
-          return new Map(options);
+          const { Map, addProtocol, removeProtocol } =
+            await import("maplibre-gl");
+          const tiles = new TerrainTiles();
+          addProtocol("terrain", async (params, controller) => {
+            const [z, x, y] = params.url
+              .replace("terrain://", "")
+              .split("/")
+              .map(Number);
+            if (
+              ![z, x, y].every(Number.isInteger) ||
+              z < 0 ||
+              z > 20 ||
+              x < 0 ||
+              y < 0 ||
+              x >= 2 ** z ||
+              y >= 2 ** z
+            )
+              throw Error("Invalid terrain tile");
+            return { data: await tiles.png({ z, x, y }, controller.signal) };
+          });
+          disposeTerrain = () => {
+            tiles.dispose();
+            removeProtocol("terrain");
+          };
+          try {
+            return new Map({ ...options, maxTileCacheSize: 48 });
+          } catch (error) {
+            disposeTerrain();
+            throw error;
+          }
         }
         return createCanvasMap(options);
       };
@@ -82,33 +112,19 @@ export function WorldMap(props: MapProps) {
           version: 8,
           sources: {
             earth: {
-              type: "image",
-              url: "/map/earth.png",
-              coordinates: [
-                [-180, 85.05112878],
-                [180, 85.05112878],
-                [180, -85.05112878],
-                [-180, -85.05112878],
-              ],
-            },
-            land: { type: "geojson", data: "/map/land.json" },
-            lakes: { type: "geojson", data: "/map/lakes.json" },
-            rivers: {
-              type: "geojson",
-              data: "/map/rivers_lake_centerlines.json",
+              type: "raster",
+              tiles: ["terrain://{z}/{x}/{y}"],
+              tileSize: 256,
+              minzoom: 0,
+              maxzoom: 20,
+              attribution: "Natural Earth",
             },
           },
           layers: [
             {
               id: "ocean",
               type: "background",
-              paint: { "background-color": "#85b7bd" },
-            },
-            {
-              id: "land",
-              type: "fill",
-              source: "land",
-              paint: { "fill-color": "#a6b78a" },
+              paint: { "background-color": "#144772" },
             },
             {
               id: "earth",
@@ -117,51 +133,6 @@ export function WorldMap(props: MapProps) {
               paint: {
                 "raster-resampling": "nearest",
                 "raster-fade-duration": 0,
-                "raster-opacity": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  0,
-                  1,
-                  5,
-                  1,
-                  8,
-                  0.15,
-                ],
-              },
-            },
-            {
-              id: "coast",
-              type: "line",
-              source: "land",
-              paint: {
-                "line-color": "#6f9b93",
-                "line-width": 0.65,
-                "line-opacity": 0.4,
-              },
-            },
-            {
-              id: "lakes",
-              type: "fill",
-              source: "lakes",
-              paint: { "fill-color": "#85b7bd" },
-            },
-            {
-              id: "rivers",
-              type: "line",
-              source: "rivers",
-              minzoom: 3,
-              paint: {
-                "line-color": "#85b7bd",
-                "line-width": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  3,
-                  0.3,
-                  12,
-                  2,
-                ],
               },
             },
           ],
@@ -169,6 +140,7 @@ export function WorldMap(props: MapProps) {
       });
       if (disposed) {
         m.remove();
+        disposeTerrain();
         return;
       }
       map.current = m;
@@ -311,6 +283,7 @@ export function WorldMap(props: MapProps) {
         cancelAnimationFrame(resizeFrame);
         window.removeEventListener("keydown", key);
         m.remove();
+        disposeTerrain();
         activeMap = undefined;
       };
     };
@@ -711,8 +684,6 @@ function drawLocal(
   });
   c.closePath();
   c.clip();
-  c.fillStyle = "#a7b782";
-  c.fillRect(nw.x, nw.y, se.x - nw.x, se.y - nw.y);
   const terrain = terrainCanvas(t);
   c.drawImage(terrain, nw.x, nw.y, se.x - nw.x, se.y - nw.y);
   const animals = [...(t.grid ?? "")]
