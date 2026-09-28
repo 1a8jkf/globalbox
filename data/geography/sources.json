@@ -1,0 +1,22 @@
+{
+  "source": "Natural Earth",
+  "revision": "ca96624a56bd078437bca8184e78163e5039ad19",
+  "license": "Public domain",
+  "assets": [
+    {
+      "file": "land.json",
+      "source": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_land.geojson",
+      "sha256": "fc6676871820860c3fde40de59000095433df7582a4600f7d55a42a6ff59d432"
+    },
+    {
+      "file": "lakes.json",
+      "source": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_lakes.geojson",
+      "sha256": "bd80df7bb252a930d421a185d6b76a50ba5292d118b16aec0ac5b4571728e88d"
+    },
+    {
+      "file": "rivers_lake_centerlines.json",
+      "source": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_10m_rivers_lake_centerlines.geojson",
+      "sha256": "3b70bb53a9fd18d567d2001c5e2b35be1aa876b1d8275997f5f23fb5bfec4456"
+    }
+  ]
+}
